@@ -62,8 +62,6 @@ contract HelperConfig is Script {
     function deployMockContractsForAnvil(uint256 deployerPrivateKey) public {
         console.log('Deploying mock contracts for Anvil...');
 
-        address deployer = vm.addr(deployerPrivateKey);
-
         vm.startBroadcast(deployerPrivateKey);
 
         // Deploy Mock ERC20 tokens
@@ -79,19 +77,6 @@ contract HelperConfig is Script {
         mockSwapRouter = new MockSwapRouter();
         anvilSwapRouter = address(mockSwapRouter);
         console.log('MockSwapRouter deployed:', anvilSwapRouter);
-
-        // Fund MockSwapRouter with tokens
-        mockUSDC.mint(address(mockSwapRouter), 5_000_000 * 10 ** 6);
-        mockWETH.mint(address(mockSwapRouter), 500 * 10 ** 18);
-        mockDAI.mint(address(mockSwapRouter), 5_000_000 * 10 ** 18);
-        console.log('MockSwapRouter funded with tokens');
-
-        // Mint some tokens to deployer for testing
-        mockUSDC.mint(deployer, 100_000 * 10 ** 6);
-        mockWETH.mint(deployer, 50 * 10 ** 18);
-        mockDAI.mint(deployer, 100_000 * 10 ** 18);
-        console.log('Test tokens minted to deployer:', deployer);
-
         vm.stopBroadcast();
     }
 

@@ -26,6 +26,7 @@ contract UniswapV3TWAPBot is ReentrancyGuard, Ownable, Pausable {
     // Order struct containing all TWAP order details
     struct Order {
         // Static fields (set once at creation)
+        uint256 orderId;
         address creator; // Address that created the order
         address tokenIn; // Token to swap from
         address tokenOut; // Token to swap to
@@ -220,6 +221,7 @@ contract UniswapV3TWAPBot is ReentrancyGuard, Ownable, Pausable {
         // Create the order
         orders[orderId] = Order({
             // Static fields
+            orderId: orderId,
             creator: msg.sender,
             tokenIn: tokenIn,
             tokenOut: tokenOut,
@@ -251,13 +253,6 @@ contract UniswapV3TWAPBot is ReentrancyGuard, Ownable, Pausable {
 
         return orderId;
     }
-
-    /**
-     * @notice Executes one slice of a TWAP order
-     * @dev Performs a swap on Uniswap V3 for one slice, updates order state, and handles timing
-     * @param orderId The unique identifier of the order to execute a slice for
-     * @return amountOut The amount of tokenOut received from this slice execution
-     */
 
     /**
      * @notice Executes one slice of a TWAP order
@@ -387,7 +382,7 @@ contract UniswapV3TWAPBot is ReentrancyGuard, Ownable, Pausable {
     function remainingAmount(
         uint256 orderId
     ) external view orderExists(orderId) returns (uint256 remaining) {
-        Order storage order = orders[orderId];
+        Order memory order = orders[orderId];
 
         // If order is cancelled, no remaining amount
         if (order.cancelled) {
