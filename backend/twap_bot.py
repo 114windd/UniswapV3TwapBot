@@ -200,7 +200,7 @@ def execute_slice(w3: Web3, contract: Contract, account: Account, order_id: int)
     signed_tx = account.sign_transaction(tx)
     
     # Send transaction
-    tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+    tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
     logger.info(f"Transaction sent: {tx_hash.hex()}")
     
     # Wait for confirmation

@@ -26,6 +26,42 @@ class TWAPBot:
         self.active_orders: List[int] = []
         
         logger.info(f"TWAP Bot initialized with wallet: {self.account.address}")
+        
+        # Load existing orders on startup
+        self._load_existing_orders()
+    
+    def _load_existing_orders(self):
+        """Load any existing orders that haven't been completed yet."""
+        try:
+            next_order_id = self.contract.functions.nextOrderId().call()
+            logger.info(f"Checking for existing orders (0 to {next_order_id - 1})...")
+            
+            for order_id in range(next_order_id):
+                try:
+                    order = get_order(self.contract, order_id)
+                    
+                    # Only add orders that are not cancelled and not fully executed
+                    if not order['cancelled']:
+                        total_slices = order['duration'] // order['interval']
+                        current_time = int(time.time())
+                        
+                        # Check if order hasn't expired and has slices remaining
+                        if (current_time <= order['startTime'] + order['duration'] and 
+                            order['slicesExecuted'] < total_slices):
+                            self.active_orders.append(order_id)
+                            logger.info(f"✓ Loaded existing order {order_id} (slices: {order['slicesExecuted']}/{total_slices})")
+                        else:
+                            logger.info(f"⊗ Skipping completed/expired order {order_id}")
+                except Exception as e:
+                    logger.error(f"Error loading order {order_id}: {e}")
+            
+            if self.active_orders:
+                logger.info(f"📊 Monitoring {len(self.active_orders)} active order(s): {self.active_orders}")
+            else:
+                logger.info("📭 No active orders found. Waiting for new orders...")
+                
+        except Exception as e:
+            logger.error(f"Error loading existing orders: {e}")
     
     def check_and_execute_slices(self):
         """Check active orders and execute slices when ready."""
@@ -91,7 +127,7 @@ class TWAPBot:
 if __name__ == "__main__":
     # Configuration
     RPC_URL = "http://127.0.0.1:8545"  # Anvil
-    CONTRACT_ADDRESS = "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"  # Your deployed contract
+    CONTRACT_ADDRESS = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"  # TWAP Bot contract address
     ABI_FILE_PATH = '/home/windd/foundry-projects/korede/koredeRepo/packages/twap-bot/out/UniSwapV3TWAPBot.sol/UniswapV3TWAPBot.json'
     PRIVATE_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"  # Your private key
     
